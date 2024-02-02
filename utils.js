@@ -59,5 +59,9 @@ function pDistance(x, y, x1, y1, x2, y2) {
       const pathEnd = polygonPaths[i + 1]
       distances.push(pDistance(pointX, pointY, pathStart[0], pathStart[1], pathEnd[0], pathEnd[1]))
     }
-    return Math.min(...distances)
+    const length = Math.min(...distances)
+    return {
+        id: polygon.attributes.id,
+        length,
+      }
   }

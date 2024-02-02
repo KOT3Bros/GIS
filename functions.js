@@ -7,6 +7,7 @@ let createPolygon
 let getPolygons
 let drawPolygons
 let drawButton
+let findMinDistanceFromPoint
 
 require([
     "esri/layers/CSVLayer",
@@ -163,7 +164,7 @@ require([
         view.graphics.addMany(polylinesToRender)
     }
 
-    createPolygon = ({id, rings}, highlight) => {
+    createPolygon = ({ id, rings }, highlight) => {
         const polygon = {
             type: "polygon",
             rings
@@ -171,7 +172,7 @@ require([
 
         const fillSymbol = {
             type: "simple-fill",
-            color: highlight?[255, 0, 0, 0.5]:[0, Math.random()*255, Math.random()*255, 0.5],
+            color: highlight ? [255, 0, 0, 0.5] : [0, Math.random() * 255, Math.random() * 255, 0.5],
             outline: {
                 color: [255, 255, 255],
                 width: 1
@@ -181,7 +182,7 @@ require([
         const polygonGraphic = new Graphic({
             geometry: polygon,
             symbol: fillSymbol,
-            attributes: {id}
+            attributes: {id},
         });
         return polygonGraphic
     }
@@ -199,12 +200,13 @@ require([
         })
     }
 
-    drawPolygons = async () => {
+    drawPolygons = async (polygonsToHighlight = []) => {
         const polygons = await getPolygons()
         const polygonsToRender = []
         for (let index = 0; index < polygons.length; index++) {
             const polygon = polygons[index];
-            const newPolygon = createPolygon(polygon, index % 2 == 0)
+            const needHighlight = polygonsToHighlight.includes(index)
+            const newPolygon = createPolygon(polygon, needHighlight)
             polygonsToRender.push(newPolygon)
         }
         view.graphics.addMany(polygonsToRender)
@@ -221,5 +223,24 @@ require([
         newButton.setAttribute("id", id)
         view.ui.add(newButton, position)
         return newButton
+    }
+
+    findMinDistanceFromPoint = (polygons) => {
+        const distances = []
+        for (let index = 0; index < polygons.length; index++) {
+          distances.push(findDistanceFromPointToPolygon(polygons[index], currentPoint));
+        }
+        let minDistPolygons = Number.MAX_SAFE_INTEGER
+        let minDistArray = []
+        for (let j = 0; j < distances.length; j++) {
+            const distance = distances[j]
+            if (distance.length < minDistPolygons) {
+                minDistPolygons = distance.length
+                minDistArray = [distance.id]
+            } else if (distance.length === minDistPolygons) {
+                minDistArray.push(distance.id)
+            }
+        }
+        return minDistArray
     }
 })

@@ -70,11 +70,8 @@ require([
   })
 
   findButton.addEventListener("click", function () {
-    const distances = []
-    for (let index = 0; index < polygons.length; index++) {
-      distances.push(findDistanceFromPointToPolygon(polygons[index], currentPoint));
-    }
-    console.log('До ближайшего объекта - ' + Math.min(...distances).toFixed(2) + ' км')
+    const minDistIds = findMinDistanceFromPoint(polygons)
+    drawPolygons(minDistIds)
   });
 
   deleteButton.addEventListener("click", function () {
