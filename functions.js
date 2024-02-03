@@ -7,7 +7,7 @@ let createPolygon
 let getPolygons
 let drawPolygons
 let drawButton
-let findMinDistanceFromPoint
+let findMinDistanceToCurrentPoint
 
 require([
     "esri/layers/CSVLayer",
@@ -99,17 +99,17 @@ require([
         });
     }
 
-    createPolyline = (paths) => {
+    createPolyline = ({ id, paths }, highlight) => {
 
         const polyline = {
             type: "polyline",
-            paths: paths
+            paths
         };
 
         const lineSymbol = {
             type: "simple-line",
-            color: [0, Math.random() * 255, Math.random() * 255],
-            width: 3
+            color: highlight ? [255, 0, 0] : [0, 0, 0],
+            width: 2
         };
 
         const lineAtt = {
@@ -121,7 +121,7 @@ require([
         const polylineGraphic = new Graphic({
             geometry: polyline,
             symbol: lineSymbol,
-            attributes: lineAtt,
+            attributes: { id }, lineAtt,
             popupTemplate: {
                 title: "{Name}",
                 content: [
@@ -150,21 +150,29 @@ require([
         let response = await fetch(url);
 
         let polylines = await response.json(); // читаем ответ в формате JSON
-        return polylines
+        return polylines.map((polyline, index) => {
+            return {
+                id: index,
+                paths: polyline
+            }
+        })
     }
 
-    drawPolylines = async () => {
+    drawPolylines = async (polylinesToHighlight = []) => {
         const polylines = await getPolylines()
-        const polylinesToRender = []
+        polylinesToRender = []
         for (let index = 0; index < polylines.length; index++) {
             const polyline = polylines[index];
-            const newPolyline = createPolyline(polyline)
+            const needHighlight = polylinesToHighlight.includes(index)
+            const newPolyline = createPolyline(polyline, needHighlight)
             polylinesToRender.push(newPolyline)
         }
         view.graphics.addMany(polylinesToRender)
+        return polylinesToRender
     }
 
     createPolygon = ({ id, rings }, highlight) => {
+
         const polygon = {
             type: "polygon",
             rings
@@ -225,22 +233,54 @@ require([
         return newButton
     }
 
-    findMinDistanceFromPoint = (polygons) => {
-        const distances = []
-        for (let index = 0; index < polygons.length; index++) {
-            distances.push(findDistanceFromPointToPolygon(polygons[index], currentPoint));
+    findMinDistanceToCurrentPoint = (polylines, polygons) => {
+        const distancesToPolylines = []
+        const distancesToPolygons = []
+        for (let i = 0; i < polylines.length; i++) {
+            distancesToPolylines.push(findDistanceFromCurrentPointToPolyline(polylines[i], currentPoint));
         }
-        let minDistPolygons = Number.MAX_SAFE_INTEGER
-        let minDistArray = []
-        for (let j = 0; j < distances.length; j++) {
-            const distance = distances[j]
-            if (distance.length < minDistPolygons) {
-                minDistPolygons = distance.length
-                minDistArray = [distance.id]
-            } else if (distance.length === minDistPolygons) {
-                minDistArray.push(distance.id)
+        for (let ii = 0; ii < polygons.length; ii++) {
+            distancesToPolygons.push(findDistanceFromCurrentPointToPolygon(polygons[ii], currentPoint));
+        }
+        let minDistToPolyline = Number.MAX_SAFE_INTEGER
+        let minDistToPolygon = Number.MAX_SAFE_INTEGER
+        let minDistToPolylineArray = []
+        let minDistToPolygonArray = []
+        for (let j = 0; j < distancesToPolylines.length; j++) {
+            const distance = distancesToPolylines[j]
+            if (distance.length < minDistToPolyline) {
+                minDistToPolyline = distance.length
+                minDistToPolylineArray = [distance.id]
+            } else if (distance.length === minDistToPolyline) {
+                minDistToPolylineArray.push(distance.id)
             }
         }
-        return minDistArray
+        for (let jj = 0; jj < distancesToPolygons.length; jj++) {
+            const distance = distancesToPolygons[jj]
+            if (distance.length < minDistToPolygon) {
+                minDistToPolygon = distance.length
+                minDistToPolygonArray = [distance.id]
+            } else if (distance.length === minDistToPolygon) {
+                minDistToPolygonArray.push(distance.id)
+            }
+        }
+        if (minDistToPolyline < minDistToPolygon) {
+            drawPolylines(minDistToPolylineArray)
+            for (let index = 0; index < polygonsToRender.length; index++) {
+                view.graphics.remove(polygonsToRender[index])
+            }
+            drawPolygons()
+        }
+        else {
+            for (let index = 0; index < polygonsToRender.length; index++) {
+                view.graphics.remove(polygonsToRender[index])
+            }
+            drawPolylines()
+            drawPolygons(minDistToPolygonArray)
+        }
+        return {
+            minDistToPolylineArray,
+            minDistToPolygonArray
+        }
     }
 })

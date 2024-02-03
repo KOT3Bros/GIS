@@ -1,4 +1,4 @@
-function pDistance(x, y, x1, y1, x2, y2) {
+function calculationDistFromPointToLine(x, y, x1, y1, x2, y2) {
     const A = x - x1;
     const B = y - y1;
     const C = x2 - x1;
@@ -49,7 +49,7 @@ function pDistance(x, y, x1, y1, x2, y2) {
     return distance
   }
 
-  const findDistanceFromPointToPolygon = (polygon, point) => {
+  const findDistanceFromCurrentPointToPolygon = (polygon, point) => {
     const polygonPaths = polygon.geometry.rings[0]
     const pointX = point.geometry.x
     const pointY = point.geometry.y
@@ -57,11 +57,28 @@ function pDistance(x, y, x1, y1, x2, y2) {
     for (let i = 0; i < polygonPaths.length - 1; i++) {
       const pathStart = polygonPaths[i]
       const pathEnd = polygonPaths[i + 1]
-      distances.push(pDistance(pointX, pointY, pathStart[0], pathStart[1], pathEnd[0], pathEnd[1]))
+      distances.push(calculationDistFromPointToLine(pointX, pointY, pathStart[0], pathStart[1], pathEnd[0], pathEnd[1]))
     }
     const length = Math.min(...distances)
     return {
         id: polygon.attributes.id,
         length,
+      }
+  }
+
+  const findDistanceFromCurrentPointToPolyline = (polyline, point) => {
+    const polylinePaths = polyline.geometry.paths[0]
+    const pointX = point.geometry.x
+    const pointY = point.geometry.y
+    const distances = []
+    for (let i = 0; i < polylinePaths.length - 1; i++) {
+      const pathStart = polylinePaths[i]
+      const pathEnd = polylinePaths[i + 1]
+      distances.push(calculationDistFromPointToLine(pointX, pointY, pathStart[0], pathStart[1], pathEnd[0], pathEnd[1]))
+    }
+    const length = Math.min(...distances)
+    return {
+        id: polyline.attributes.id,
+        length
       }
   }

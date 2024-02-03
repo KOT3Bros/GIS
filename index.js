@@ -1,6 +1,7 @@
 let map
 let view
 let currentPoint
+let polylinesToRender
 let polygonsToRender
 
 require([
@@ -48,7 +49,10 @@ require([
 ], (Map, CSVLayer, SceneView, GraphicsLayer, Graphic, Search) => {
 
   const cams = drawCams()
-  const polylines = drawPolylines()
+  let polylines
+  drawPolylines().then((result) => {
+    polylines = result
+  }) 
   let polygons
   drawPolygons().then((result) => {
     polygons = result
@@ -71,11 +75,7 @@ require([
   })
 
   findButton.addEventListener("click", function () {
-    for (let index = 0; index < polygonsToRender.length; index++) {
-      view.graphics.remove(polygonsToRender[index])      
-    }
-    const minDistIds = findMinDistanceFromPoint(polygons)
-    drawPolygons(minDistIds)
+    findMinDistanceToCurrentPoint(polylines, polygons)
   });
 
   deleteButton.addEventListener("click", function () {
