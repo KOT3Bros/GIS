@@ -1,6 +1,7 @@
 let map
 let view
 let currentPoint
+let polygonsToRender
 
 require([
   "esri/Map",
@@ -53,29 +54,32 @@ require([
     polygons = result
   }) 
 
-  const deleteButton = drawButton({
-    id: "deleteButton",
-    textContent: "Delete point",
-    className: "esri-widget--button esri-widget esri-interactive",
-    width: "240px",
-    position: "bottom-right"
-  })
-
   const findButton = drawButton({
     id: "findButton",
     textContent: "Find the nearest object",
     className: "esri-widget--button esri-widget esri-interactive",
     width: "240px",
-    position: "bottom-right"
+    position: "top-right"
+  })
+
+  const deleteButton = drawButton({
+    id: "deleteButton",
+    textContent: "Delete current point",
+    className: "esri-widget--button esri-widget esri-interactive",
+    width: "240px",
+    position: "top-right"
   })
 
   findButton.addEventListener("click", function () {
+    for (let index = 0; index < polygonsToRender.length; index++) {
+      view.graphics.remove(polygonsToRender[index])      
+    }
     const minDistIds = findMinDistanceFromPoint(polygons)
     drawPolygons(minDistIds)
   });
 
   deleteButton.addEventListener("click", function () {
-    view.graphics.remove(currentPoint)
+    view.graphics.remove(currentPoint)   
   });
 
   view.on("double-click", function (event) {

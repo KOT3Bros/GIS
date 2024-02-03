@@ -108,7 +108,7 @@ require([
 
         const lineSymbol = {
             type: "simple-line",
-            color: [0, Math.random()*255, Math.random()*255],
+            color: [0, Math.random() * 255, Math.random() * 255],
             width: 3
         };
 
@@ -172,7 +172,7 @@ require([
 
         const fillSymbol = {
             type: "simple-fill",
-            color: highlight ? [255, 0, 0, 0.5] : [0, Math.random() * 255, Math.random() * 255, 0.5],
+            color: highlight ? [255, 0, 0, 0.5] : [0, 255, 255, 0.3],
             outline: {
                 color: [255, 255, 255],
                 width: 1
@@ -182,7 +182,7 @@ require([
         const polygonGraphic = new Graphic({
             geometry: polygon,
             symbol: fillSymbol,
-            attributes: {id},
+            attributes: { id },
         });
         return polygonGraphic
     }
@@ -202,7 +202,7 @@ require([
 
     drawPolygons = async (polygonsToHighlight = []) => {
         const polygons = await getPolygons()
-        const polygonsToRender = []
+        polygonsToRender = []
         for (let index = 0; index < polygons.length; index++) {
             const polygon = polygons[index];
             const needHighlight = polygonsToHighlight.includes(index)
@@ -228,7 +228,7 @@ require([
     findMinDistanceFromPoint = (polygons) => {
         const distances = []
         for (let index = 0; index < polygons.length; index++) {
-          distances.push(findDistanceFromPointToPolygon(polygons[index], currentPoint));
+            distances.push(findDistanceFromPointToPolygon(polygons[index], currentPoint));
         }
         let minDistPolygons = Number.MAX_SAFE_INTEGER
         let minDistArray = []
