@@ -1,6 +1,7 @@
 let map
 let view
-let currentPoint
+let currentPointGraphic
+let pointsToRender
 let polylinesToRender
 let polygonsToRender
 
@@ -48,7 +49,10 @@ require([
   "esri/widgets/Search"
 ], (Map, CSVLayer, SceneView, GraphicsLayer, Graphic, Search) => {
 
-  const cams = drawCams()
+  let points
+  drawPoints().then((result) => {
+    points = result
+  }) 
   let polylines
   drawPolylines().then((result) => {
     polylines = result
@@ -75,17 +79,17 @@ require([
   })
 
   findButton.addEventListener("click", function () {
-    findMinDistanceToCurrentPoint(polylines, polygons)
+    findMinDistanceToCurrentPoint(points, polylines, polygons)
   });
 
   deleteButton.addEventListener("click", function () {
-    view.graphics.remove(currentPoint)   
+    view.graphics.remove(currentPointGraphic)  
   });
 
   view.on("double-click", function (event) {
-    view.graphics.remove(currentPoint)
-    createPoint(event.mapPoint.longitude, event.mapPoint.latitude)
-    view.graphics.add(currentPoint)
+    view.graphics.remove(currentPointGraphic)
+    createCurrentPoint(event.mapPoint.longitude, event.mapPoint.latitude)
+    view.graphics.add(currentPointGraphic)
     event.stopPropagation()
   });
 })

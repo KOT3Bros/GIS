@@ -1,0 +1,114 @@
+[
+    {
+        "id": 0,
+        "name": "Sony A7S all-sky",
+        "latitude": 78.148,
+        "longitude": 16.043,
+        "url": "http://kho.unis.no/Quicklooks/kho_sony.png"
+    },
+    {
+        "id": 1,
+        "name": "Color All Sky Camera in Longyearbyen (UNIS)",
+        "latitude": 78.1477778,
+        "longitude": 16.0397222,
+        "url": "http://kho.unis.no/Quicklooks/ZWO/Allsky.jpg"
+    },
+    {
+        "id": 2,
+        "name": "Color All Sky Camera in Ny-Alesund (UIO)",
+        "latitude": 78.9236111,
+        "longitude": 11.9302778,
+        "url": "http://193.156.10.139/Allsky.jpg"
+    },
+    {
+        "id": 3,
+        "name": "Color All Sky Camera in KEVO (FMI)",
+        "latitude": 69.76,
+        "longitude": 27.01,
+        "url": "https://space.fmi.fi/MIRACLE/ASC/ASC_keograms/tmp_KEV_keo/Allsky_KEVO.jpg"
+    },
+    {
+        "id": 4,
+        "name": "Color All Sky Camera in MUONIO (FMI)",
+        "latitude": 68.0288889,
+        "longitude": 23.5630556,
+        "url": "https://space.fmi.fi/MIRACLE/ASC/ASC_keograms/tmp_MUO_keo/Allsky_MUONIO.jpg"
+    },
+    {
+        "id": 5,
+        "name": "Color All Sky Camera in Skibotn (UiT)",
+        "latitude": 69.3480556,
+        "longitude": 20.3630556,
+        "url": "https://fox.phys.uit.no/ASC/BACC5.jpg"
+    },
+    {
+        "id": 6,
+        "name": "Kannuslehto (KAN)",
+        "latitude": 67.74,
+        "longitude": 26.27,
+        "url": "https://www.sgo.fi/pub_asc/requests/skyi_test/skyi_KAN_latest.jpg"
+    },
+    {
+        "id": 7,
+        "name": "Sodankyla (SOD)",
+        "latitude": 67.42,
+        "longitude": 26.39,
+        "url": "https://www.sgo.fi/pub_asc/requests/skyi_test/skyi_SOD_latest.jpg"
+    },
+    {
+        "id": 8,
+        "name": "Rovaniemi (ROV)",
+        "latitude": 66.71,
+        "longitude": 25.33,
+        "url": "https://www.sgo.fi/pub_asc/requests/skyi_test/skyi_ROV_latest.jpg"
+    },
+    {
+        "id": 9,
+        "name": "Riisitunturi (POS)",
+        "latitude": 66.22,
+        "longitude": 28.74,
+        "url": "https://www.sgo.fi/pub_asc/requests/skyi_test/skyi_POS_latest.jpg"
+    },
+    {
+        "id": 10,
+        "name": "Kiruna allsky camera",
+        "latitude": 67.8407222,
+        "longitude": 20.4111111,
+        "url": "https://www.irf.se/alis/allsky/krn/latest.jpeg?noforevercache"
+    },
+    {
+        "id": 11,
+        "name": "Northern Light Camera 1",
+        "latitude": 66.9648076,
+        "longitude": 19.8280132,
+        "url": "https://uk.jokkmokk.jp/photo/nr1/latest.jpg"
+    },
+    {
+        "id": 12,
+        "name": "Northern Light Camera 2",
+        "latitude": 66.9648076,
+        "longitude": 19.8280132,
+        "url": "https://uk.jokkmokk.jp/photo/nr2/latest.jpg"
+    },
+    {
+        "id": 13,
+        "name": "Northern Light Camera 3",
+        "latitude": 66.9648076,
+        "longitude": 19.8280132,
+        "url": "https://uk.jokkmokk.jp/photo/nr3/latest.jpg"
+    },
+    {
+        "id": 14,
+        "name": "Northern Light Camera 4",
+        "latitude": 66.9648076,
+        "longitude": 19.8280132,
+        "url": "https://uk.jokkmokk.jp/photo/nr4/latest.jpg"
+    },
+    {
+        "id": 15,
+        "name": "Northern Light Camera 5",
+        "latitude": 66.9648076,
+        "longitude": 19.8280132,
+        "url": "https://uk.jokkmokk.jp/photo/nr5/latest.jpg"
+    }
+]

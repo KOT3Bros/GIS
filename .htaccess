@@ -1,0 +1,10 @@
+
+# FileManager IP rules
+Order Allow,Deny
+Allow from all
+
+Header set Access-Control-Allow-Origin: *
+
+<Files "location-pin.png">
+    Header set Access-Control-Allow-Origin "*"
+</Files>

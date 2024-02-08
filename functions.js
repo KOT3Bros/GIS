@@ -1,5 +1,7 @@
-let drawCams
-let createPoint
+let createPoints
+let getPoints
+let drawPoints
+let createCurrentPoint
 let createPolyline
 let getPolylines
 let drawPolylines
@@ -10,13 +12,24 @@ let drawButton
 let findMinDistanceToCurrentPoint
 
 require([
-    "esri/layers/CSVLayer",
     "esri/Graphic"
-], (CSVLayer, Graphic) => {
+], (Graphic) => {
 
-    drawCams = () => {
-        const url =
-            "http://gisvkr6y.beget.tech/cams.csv";
+    createPoints = ({ id, name, latitude, longitude, url }, highlight) => {
+        const point = {
+            type: "point",
+            latitude,
+            longitude
+        };
+
+        const markerSymbol = {
+            type: "simple-marker",
+            color: highlight ? [255, 0, 0] : [0, 255, 255, 0.3],
+            outline: {
+                color: [255, 255, 255],
+                width: 1
+            }
+        };
 
         const template = {
             title: "{name}",
@@ -37,38 +50,54 @@ require([
             ]
         };
 
-        const csvLayer = new CSVLayer({
-            url: url,
+        const pointGraphic = new Graphic({
+            geometry: point,
+            symbol: markerSymbol,
+            attributes: { id, name, latitude, longitude, url },
             popupTemplate: template
         });
+        return pointGraphic
+    };
 
-        csvLayer.renderer = {
-            type: "simple",
-            symbol: {
-                type: "point-3d",
-                symbolLayers: [
-                    {
-                        type: "icon",
-                        resource: { href: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png" },
-                        material: { color: "red" },
-                        size: 25
-                    },
-                ]
+    getPoints = async () => {
+        let url = "http://gisvkr6y.beget.tech/points.json"
+        let response = await fetch(url)
+
+        let points = await response.json()
+        return points.map((points, index) => {
+            return {
+                id: index,
+                name: points.name,
+                latitude: points.latitude,
+                longitude: points.longitude,
+                url: points.url
             }
-        };
-        map.add(csvLayer);
+        })
     }
 
-    createPoint = (longitude, latitude) => {
-        const point = {
+    drawPoints = async (pointsToHighlight = []) => {
+        const points = await getPoints()
+        pointsToRender = []
+        for (let index = 0; index < points.length; index++) {
+            const point = points[index]
+            const needHighlight = pointsToHighlight.includes(index)
+            const newPoint = createPoints(point, needHighlight)
+            pointsToRender.push(newPoint)
+        }
+        view.graphics.addMany(pointsToRender);;
+        return pointsToRender
+    }
+
+    createCurrentPoint = (longitude, latitude) => {
+        const currentPoint = {
             type: "point",
             longitude: longitude,
             latitude: latitude
         };
 
-        currentPoint = new Graphic({
-            geometry: point,
-            attributes: point,
+        currentPointGraphic = new Graphic({
+            geometry: currentPoint,
+            attributes: currentPoint,
             popupTemplate: {
                 title: "Coordinates of a point",
                 content: [
@@ -86,17 +115,15 @@ require([
                 ]
             },
             symbol: {
-                type: "point-3d",
-                symbolLayers: [
-                    {
-                        type: "icon",
-                        resource: { href: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png" },
-                        material: { color: "red" },
-                        size: 25
-                    },
-                ]
+                type: "simple-marker",
+                color: [0, 255, 255, 0.3],
+                outline: {
+                    color: [255, 255, 255],
+                    width: 1
+                }
             }
         });
+        return currentPointGraphic
     }
 
     createPolyline = ({ id, paths }, highlight) => {
@@ -233,21 +260,36 @@ require([
         return newButton
     }
 
-    findMinDistanceToCurrentPoint = (polylines, polygons) => {
+    findMinDistanceToCurrentPoint = (points, polylines, polygons) => {
+        const distancesToPoints = []
         const distancesToPolylines = []
         const distancesToPolygons = []
-        for (let i = 0; i < polylines.length; i++) {
-            distancesToPolylines.push(findDistanceFromCurrentPointToPolyline(polylines[i], currentPoint));
+        for (let i = 0; i < points.length; i++) {
+            distancesToPoints.push(findDistanceFromCurrentPointToPoints(points[i], currentPointGraphic))
         }
-        for (let ii = 0; ii < polygons.length; ii++) {
-            distancesToPolygons.push(findDistanceFromCurrentPointToPolygon(polygons[ii], currentPoint));
+        for (let j = 0; j < polylines.length; j++) {
+            distancesToPolylines.push(findDistanceFromCurrentPointToPolyline(polylines[j], currentPointGraphic));
         }
+        for (let k = 0; k < polygons.length; k++) {
+            distancesToPolygons.push(findDistanceFromCurrentPointToPolygon(polygons[k], currentPointGraphic));
+        }
+        let minDistToPoint = Number.MAX_SAFE_INTEGER
         let minDistToPolyline = Number.MAX_SAFE_INTEGER
         let minDistToPolygon = Number.MAX_SAFE_INTEGER
+        let minDistToPointArray = []
         let minDistToPolylineArray = []
         let minDistToPolygonArray = []
-        for (let j = 0; j < distancesToPolylines.length; j++) {
-            const distance = distancesToPolylines[j]
+        for (let ii = 0; ii < distancesToPoints.length; ii++) {
+            if (distancesToPoints[ii] < minDistToPoint) {
+                minDistToPoint = distancesToPoints[ii]
+                minDistToPointArray = [ii]
+            }
+            else if (distancesToPoints[ii] === minDistToPoint) {
+                minDistToPointArray.push(ii)
+            }
+        }
+        for (let jj = 0; jj < distancesToPolylines.length; jj++) {
+            const distance = distancesToPolylines[jj]
             if (distance.length < minDistToPolyline) {
                 minDistToPolyline = distance.length
                 minDistToPolylineArray = [distance.id]
@@ -255,8 +297,8 @@ require([
                 minDistToPolylineArray.push(distance.id)
             }
         }
-        for (let jj = 0; jj < distancesToPolygons.length; jj++) {
-            const distance = distancesToPolygons[jj]
+        for (let kk = 0; kk < distancesToPolygons.length; kk++) {
+            const distance = distancesToPolygons[kk]
             if (distance.length < minDistToPolygon) {
                 minDistToPolygon = distance.length
                 minDistToPolygonArray = [distance.id]
@@ -264,21 +306,30 @@ require([
                 minDistToPolygonArray.push(distance.id)
             }
         }
-        if (minDistToPolyline < minDistToPolygon) {
+
+        if (minDistToPoint < minDistToPolyline && minDistToPoint < minDistToPolygon) {
+            view.graphics.removeAll()
+            view.graphics.add(currentPointGraphic)
+            drawPoints(minDistToPointArray)
+            drawPolylines()
+            drawPolygons()
+        }
+        else if (minDistToPolyline < minDistToPoint && minDistToPolyline < minDistToPolygon) {
+            view.graphics.removeAll()
+            view.graphics.add(currentPointGraphic)
+            drawPoints()
             drawPolylines(minDistToPolylineArray)
-            for (let index = 0; index < polygonsToRender.length; index++) {
-                view.graphics.remove(polygonsToRender[index])
-            }
             drawPolygons()
         }
         else {
-            for (let index = 0; index < polygonsToRender.length; index++) {
-                view.graphics.remove(polygonsToRender[index])
-            }
+            view.graphics.removeAll()
+            view.graphics.add(currentPointGraphic)
+            drawPoints()
             drawPolylines()
             drawPolygons(minDistToPolygonArray)
         }
         return {
+            minDistToPointArray,
             minDistToPolylineArray,
             minDistToPolygonArray
         }
