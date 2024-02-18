@@ -1,9 +1,6 @@
 let map
 let view
 let currentPointGraphic
-let pointsToRender
-let polylinesToRender
-let polygonsToRender
 
 require([
   "esri/Map",
@@ -18,7 +15,7 @@ require([
 
   view = new SceneView({
     container: "viewDiv",
-    map: map,
+    map,
     environment: {
       lighting: {
         type: "virtual"
@@ -34,33 +31,25 @@ require([
     }
   });
 
+  let initialCamera = view.camera.clone()
+
   const search = new Search({
-    view: view
+    view
   })
   view.ui.add(search, "top-right")
-})
-
-require([
-  "esri/Map",
-  "esri/layers/CSVLayer",
-  "esri/views/SceneView",
-  "esri/layers/GraphicsLayer",
-  "esri/Graphic",
-  "esri/widgets/Search"
-], (Map, CSVLayer, SceneView, GraphicsLayer, Graphic, Search) => {
 
   let points
   drawPoints().then((result) => {
     points = result
-  }) 
+  })
   let polylines
   drawPolylines().then((result) => {
     polylines = result
-  }) 
+  })
   let polygons
   drawPolygons().then((result) => {
     polygons = result
-  }) 
+  })
 
   const findButton = drawButton({
     id: "findButton",
@@ -78,12 +67,24 @@ require([
     position: "top-right"
   })
 
+  const resetZoomButton = drawButton({
+    id: "resetZoomButton",
+    textContent: "Reset Zoom",
+    className: "esri-widget--button esri-widget esri-interactive",
+    width: "240px",
+    position: "top-right"
+  })
+
   findButton.addEventListener("click", function () {
     findMinDistanceToCurrentPoint(points, polylines, polygons)
   });
 
   deleteButton.addEventListener("click", function () {
-    view.graphics.remove(currentPointGraphic)  
+    view.graphics.remove(currentPointGraphic)
+  });
+
+  resetZoomButton.addEventListener("click", function () {
+    view.goTo(initialCamera)
   });
 
   view.on("double-click", function (event) {

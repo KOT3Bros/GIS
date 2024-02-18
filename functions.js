@@ -1,19 +1,23 @@
 let createPoints
 let getPoints
 let drawPoints
+let pointsToRender
 let createCurrentPoint
 let createPolyline
 let getPolylines
 let drawPolylines
+let polylinesToRender
 let createPolygon
 let getPolygons
 let drawPolygons
+let polygonsToRender
 let drawButton
 let findMinDistanceToCurrentPoint
 
 require([
-    "esri/Graphic"
-], (Graphic) => {
+    "esri/Graphic",
+    "esri/widgets/Popup"
+], (Graphic, Popup) => {
 
     createPoints = ({ id, name, latitude, longitude, url }, highlight) => {
         const point = {
@@ -84,15 +88,15 @@ require([
             const newPoint = createPoints(point, needHighlight)
             pointsToRender.push(newPoint)
         }
-        view.graphics.addMany(pointsToRender);;
+        view.graphics.addMany(pointsToRender)
         return pointsToRender
     }
 
     createCurrentPoint = (longitude, latitude) => {
         const currentPoint = {
             type: "point",
-            longitude: longitude,
-            latitude: latitude
+            longitude,
+            latitude
         };
 
         currentPointGraphic = new Graphic({
@@ -135,39 +139,14 @@ require([
 
         const lineSymbol = {
             type: "simple-line",
-            color: highlight ? [255, 0, 0] : [0, 0, 0],
+            color: highlight ? [255, 0, 0] : [0, Math.random() * 255, Math.random() * 255],
             width: 2
-        };
-
-        const lineAtt = {
-            Name: "Keystone Pipeline",
-            Owner: "TransCanada",
-            Length: "3,456 km"
         };
 
         const polylineGraphic = new Graphic({
             geometry: polyline,
             symbol: lineSymbol,
-            attributes: { id }, lineAtt,
-            popupTemplate: {
-                title: "{Name}",
-                content: [
-                    {
-                        type: "fields",
-                        fieldInfos: [
-                            {
-                                fieldName: "Name"
-                            },
-                            {
-                                fieldName: "Owner"
-                            },
-                            {
-                                fieldName: "Length"
-                            }
-                        ]
-                    }
-                ]
-            }
+            attributes: { id }
         });
         return polylineGraphic
     }
@@ -260,7 +239,7 @@ require([
         return newButton
     }
 
-    findMinDistanceToCurrentPoint = (points, polylines, polygons) => {
+    findMinDistanceToCurrentPoint = async (points, polylines, polygons) => {
         const distancesToPoints = []
         const distancesToPolylines = []
         const distancesToPolygons = []
@@ -306,28 +285,56 @@ require([
                 minDistToPolygonArray.push(distance.id)
             }
         }
-
+        let goToHighlightedObject
+        let zoom
+        let infoPopupText
+        let latitude
+        let longitude
+        view.graphics.removeAll()
+        view.graphics.add(currentPointGraphic)
         if (minDistToPoint < minDistToPolyline && minDistToPoint < minDistToPolygon) {
-            view.graphics.removeAll()
-            view.graphics.add(currentPointGraphic)
-            drawPoints(minDistToPointArray)
-            drawPolylines()
-            drawPolygons()
+            await drawPoints(minDistToPointArray)
+            await drawPolylines()
+            await drawPolygons()
+            zoom = 15
+            goToHighlightedObject = pointsToRender[minDistToPointArray[0]]
+            latitude = pointsToRender[minDistToPointArray[0]].geometry.latitude
+            longitude = pointsToRender[minDistToPointArray[0]].geometry.longitude
+            infoPopupText = "The nearest object is a point.<br />The distance to this point is " + minDistToPoint.toFixed(2) + " km."
         }
         else if (minDistToPolyline < minDistToPoint && minDistToPolyline < minDistToPolygon) {
-            view.graphics.removeAll()
-            view.graphics.add(currentPointGraphic)
-            drawPoints()
-            drawPolylines(minDistToPolylineArray)
-            drawPolygons()
+            await drawPoints()
+            await drawPolylines(minDistToPolylineArray)
+            await drawPolygons()
+            zoom = 5
+            goToHighlightedObject = polylinesToRender[minDistToPolylineArray[0]]
+            latitude = polylinesToRender[minDistToPolylineArray[0]].geometry.paths[0][1][1]
+            longitude = polylinesToRender[minDistToPolylineArray[0]].geometry.paths[0][1][0]
+            infoPopupText = "The nearest object is a polyline.<br />The distance to this polyline is " + minDistToPolyline.toFixed(2) + " km."
         }
         else {
-            view.graphics.removeAll()
-            view.graphics.add(currentPointGraphic)
-            drawPoints()
-            drawPolylines()
-            drawPolygons(minDistToPolygonArray)
+            await drawPoints()
+            await drawPolylines()
+            await drawPolygons(minDistToPolygonArray)
+            zoom = 5
+            goToHighlightedObject = polygonsToRender[minDistToPolygonArray[0]]
+            latitude = polygonsToRender[minDistToPolygonArray[0]].geometry.rings[0][0][1]
+            longitude = polygonsToRender[minDistToPolygonArray[0]].geometry.rings[0][0][0]
+            infoPopupText = "The nearest object is a polygon.<br />The distance to this polygon is " + minDistToPolygon.toFixed(2) + " km."
         }
+        view.goTo({
+            target: goToHighlightedObject,
+            zoom
+        })
+        const infoPopup = new Popup()
+        view.popup = infoPopup
+        infoPopup.open({
+            location: {
+                latitude,
+                longitude
+            },
+            title: infoPopupText
+        })
         return {
             minDistToPointArray,
             minDistToPolylineArray,
